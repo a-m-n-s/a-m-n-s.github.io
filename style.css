@@ -1,0 +1,58 @@
+/* Home page — center everything on screen */
+body.home {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Work page — centered column, dates on the left */
+body.work .container {
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.entry {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.year {
+  flex: 0 0 4rem;
+}
+
+/* Interests page */
+body.interests .container {
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+body.interests section {
+  margin-bottom: 2.5rem;
+}
+
+.film figure,
+.book figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.film img,
+.book img {
+  width: 200px;
+  max-width: 60%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.film .loading {
+  color: #888;
+}

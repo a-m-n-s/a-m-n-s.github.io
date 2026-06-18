@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interests — Manas Adepu</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="interests">
+  <div class="container">
+    <a class="home" href="index.html">home</a>
+    <h1>Interests</h1>
+
+    <section class="film">
+      <h2>Last movie I watched</h2>
+      <figure id="lb-film">
+        <span class="loading">loading…</span>
+      </figure>
+    </section>
+
+    <section class="freetime">
+      <h2>In my free time</h2>
+      <p>I like going to the gym, watching movies, and playing pickleball.</p>
+    </section>
+  </div>
+
+  <script>
+    // Set this to your Letterboxd username.
+    const LETTERBOXD_USERNAME = "m_n_s";
+
+    async function loadLastFilm() {
+      const figure = document.getElementById("lb-film");
+      const rssUrl = `https://letterboxd.com/${LETTERBOXD_USERNAME}/rss/`;
+      // Letterboxd's RSS sends no CORS headers, so read it through rss2json,
+      // which returns clean JSON (and a poster thumbnail) with CORS allowed.
+      const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+
+      try {
+        const res = await fetch(api);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.status !== "ok" || !data.items?.length) {
+          throw new Error("No films in feed.");
+        }
+
+        const item = data.items[0];
+        // Feed titles look like "Karuppu, 2026 - ★★"; strip the rating and year for alt text.
+        const name = item.title.replace(/\s*-\s*★.*$/, "").replace(/,\s*\d{4}$/, "");
+        // Poster lives in `thumbnail`, with a fallback to the <img> in the body.
+        const poster = item.thumbnail ||
+          new DOMParser().parseFromString(item.description || "", "text/html")
+            .querySelector("img")?.src;
+
+        figure.innerHTML = poster
+          ? `<img src="${poster}" alt="${name} poster">`
+          : `<span class="loading">No poster found.</span>`;
+      } catch (err) {
+        figure.innerHTML = `<span class="loading">Couldn't load (${err.message}).</span>`;
+      }
+    }
+
+    loadLastFilm();
+  </script>
+</body>
+</html>
