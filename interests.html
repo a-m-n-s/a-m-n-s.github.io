@@ -12,10 +12,10 @@
     <h1>Interests</h1>
 
     <section class="film">
-      <h2>Last movie I watched</h2>
-      <figure id="lb-film">
+      <h2>Last 5 movies I watched</h2>
+      <div id="lb-films" class="film-row">
         <span class="loading">loading…</span>
-      </figure>
+      </div>
     </section>
 
     <section class="freetime">
@@ -28,8 +28,8 @@
     // Set this to your Letterboxd username.
     const LETTERBOXD_USERNAME = "m_n_s";
 
-    async function loadLastFilm() {
-      const figure = document.getElementById("lb-film");
+    async function loadLastFilms() {
+      const container = document.getElementById("lb-films");
       const rssUrl = `https://letterboxd.com/${LETTERBOXD_USERNAME}/rss/`;
       // Letterboxd's RSS sends no CORS headers, so read it through rss2json,
       // which returns clean JSON (and a poster thumbnail) with CORS allowed.
@@ -43,23 +43,44 @@
           throw new Error("No films in feed.");
         }
 
-        const item = data.items[0];
-        // Feed titles look like "Karuppu, 2026 - ★★"; strip the rating and year for alt text.
-        const name = item.title.replace(/\s*-\s*★.*$/, "").replace(/,\s*\d{4}$/, "");
-        // Poster lives in `thumbnail`, with a fallback to the <img> in the body.
-        const poster = item.thumbnail ||
-          new DOMParser().parseFromString(item.description || "", "text/html")
-            .querySelector("img")?.src;
+        // rss2json drops Letterboxd's <watchedDate>, so order by pubDate (when
+        // the entry was logged), newest first, before taking the last 5.
+        const recent = data.items
+          .slice()
+          .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
+          .slice(0, 5);
 
-        figure.innerHTML = poster
-          ? `<img src="${poster}" alt="${name} poster">`
-          : `<span class="loading">No poster found.</span>`;
+        const cards = recent.map((item) => {
+          // Feed titles look like "Karuppu, 2026 - ★★★½"; split out the name and rating.
+          const name = item.title.replace(/\s*-\s*★.*$/, "").replace(/,\s*\d{4}$/, "");
+          // Stars run from the first ★ to the end, including a trailing ½ for half ratings.
+          const rating = item.title.match(/★[★½]*/)?.[0] || "";
+          // Poster lives in `thumbnail`, with a fallback to the <img> in the body.
+          const poster = item.thumbnail ||
+            new DOMParser().parseFromString(item.description || "", "text/html")
+              .querySelector("img")?.src;
+
+          const posterEl = poster
+            ? `<img src="${poster}" alt="${name} poster">`
+            : `<span class="loading">No poster</span>`;
+          const ratingEl = rating
+            ? `<figcaption class="stars">${rating}</figcaption>`
+            : "";
+
+          return `<figure class="film-card">
+            ${posterEl}
+            ${ratingEl}
+            <figcaption class="film-name">${name}</figcaption>
+          </figure>`;
+        });
+
+        container.innerHTML = cards.join("");
       } catch (err) {
-        figure.innerHTML = `<span class="loading">Couldn't load (${err.message}).</span>`;
+        container.innerHTML = `<span class="loading">Couldn't load (${err.message}).</span>`;
       }
     }
 
-    loadLastFilm();
+    loadLastFilms();
   </script>
 </body>
 </html>
